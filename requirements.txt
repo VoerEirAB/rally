@@ -3,23 +3,23 @@
 # process, which may cause wedges in the gate later.
 
 # Rally core dependencies
-alembic                                                # MIT
-decorator                                              # new BSD License
-Jinja2                                                 # BSD
-jsonschema<3.0.0                                       # MIT
-netaddr                                                # BSD
-oslo.config!=4.3.0,!=4.4.0                             # Apache Software License
+alembic==1.0.6                                         # MIT
+decorator==4.3.0                                       # new BSD License
+Jinja2==2.10                                           # BSD
+jsonschema==2.6.0                                      # MIT
+netaddr==0.7.19                                        # BSD
+oslo.config==6.5.1                                     # Apache Software License
 # do not forget to remove `testresources` from test-requirements. it is a
 # dependency of oslo.db for tests
-oslo.db                                                # Apache Software License
-oslo.log                                               # Apache Software License
-paramiko                                               # LGPL
-pbr!=2.1.0                                             # Apache Software License
-PrettyTable<0.8                                        # BSD
-pyOpenSSL                                              # Apache License, Version 2.0
-PyYAML                                                 # MIT
-python-subunit
-requests                                               # Apache License, Version 2.0
-SQLAlchemy!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8              # MIT
-six                                                    # MIT
-virtualenv                                             # MIT
+oslo.db==4.40.0                                         # Apache Software License
+oslo.log==3.40.1                                        # Apache Software License
+paramiko==2.4.1                                         # LGPL
+pbr==4.3.0                                              # Apache Software License
+prettytable==0.7.2                                      # BSD
+pyOpenSSL==18.0.0                                       # Apache License, Version 2.0
+PyYAML==3.13                                            # MIT
+python-subunit==1.3.0
+requests==2.21.0                                        # Apache License, Version 2.0
+SQLAlchemy==1.2.10                                      # MIT
+six==1.11.0                                             # MIT
+virtualenv==16.0.0                                      # MIT
