@@ -17,9 +17,7 @@ import os
 
 import decorator
 
-from rally.common import fileutils
 from rally import exceptions
-from rally.utils import strutils
 
 PATH_GLOBALS = "~/.rally/globals"
 ENV_ENV = "RALLY_ENV"
@@ -32,10 +30,78 @@ ENVVARS = [ENV_ENV, ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFIER, ENV_VERIFICATION]
 MSG_MISSING_ARG = "Missing argument: --%(arg_name)s"
 
 
+def _read_env_file(path, except_env=None):
+    """Read the environment variable file.
+
+    :param path: the path of the file
+    :param except_env: the environment variable to avoid in the output
+
+    :returns: the content of the original file except the line starting with
+    the except_env parameter
+    """
+    output = []
+    if os.path.exists(path):
+        with open(path, "r") as env_file:
+            content = env_file.readlines()
+            for line in content:
+                if except_env is None or not line.startswith("%s=" %
+                                                             except_env):
+                    output.append(line)
+    return output
+
+
+def _load_env_file(path):
+    """Load the environment variable file into os.environ.
+
+    :param path: the path of the file
+    """
+    if os.path.exists(path):
+        content = _read_env_file(path)
+        for line in content:
+            (key, sep, value) = line.partition("=")
+            os.environ[key] = value.rstrip()
+
+
+def _rewrite_env_file(path, initial_content):
+    """Rewrite the environment variable file.
+
+    :param path: the path of the file
+    :param initial_content: the original content of the file
+    """
+    with open(path, "w+") as env_file:
+        for line in initial_content:
+            env_file.write(line)
+
+
+def _update_env_file(path, env_key, env_value):
+    """Update the environment variable file.
+
+    :param path: the path of the file
+    :param env_key: the key to update
+    :param env_value: the value of the property to update
+    """
+    output = _read_env_file(path, env_key)
+    output.append("%s=%s" % (env_key, env_value))
+    _rewrite_env_file(path, output)
+
+
+def update_globals_file(key, value):
+    """Update the globals variables file.
+
+    :param key: the key to update
+    :param value: the value to update
+    """
+    dir = os.path.expanduser("~/.rally/")
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    expanded_path = os.path.join(dir, "globals")
+    _update_env_file(expanded_path, key, "%s\n" % value)
+
+
 def clear_global(global_key):
     path = os.path.expanduser(PATH_GLOBALS)
     if os.path.exists(path):
-        fileutils.update_env_file(path, global_key, "\n")
+        _update_env_file(path, global_key, "\n")
     if global_key in os.environ:
         os.environ.pop(global_key)
 
@@ -47,7 +113,7 @@ def clear_env():
 
 def get_global(global_key, do_raise=False):
     if global_key not in os.environ:
-        fileutils.load_env_file(os.path.expanduser(PATH_GLOBALS))
+        _load_env_file(os.path.expanduser(PATH_GLOBALS))
     value = os.environ.get(global_key)
     if not value and do_raise:
         raise exceptions.InvalidArgumentsException("%s env is missing"
@@ -111,64 +177,3 @@ def with_default_verifier_id(cli_arg_name="id"):
 with_default_task_id = default_from_global("task_id", ENV_TASK, "uuid")
 with_default_verification_uuid = default_from_global("verification_uuid",
                                                      ENV_VERIFICATION, "uuid")
-
-
-def get_creds_from_env_vars():
-    required_env_vars = ["OS_AUTH_URL", "OS_USERNAME", "OS_PASSWORD"]
-    missing_env_vars = [v for v in required_env_vars if v not in os.environ]
-    if missing_env_vars:
-        msg = ("The following environment variables are "
-               "required but not set: %s" % " ".join(missing_env_vars))
-        raise exceptions.ValidationError(message=msg)
-
-    creds = {
-        "auth_url": os.environ["OS_AUTH_URL"],
-        "admin": {
-            "username": os.environ["OS_USERNAME"],
-            "password": os.environ["OS_PASSWORD"],
-            "tenant_name": get_project_name_from_env()
-        },
-        "endpoint_type": get_endpoint_type_from_env(),
-        "endpoint": os.environ.get("OS_ENDPOINT"),
-        "region_name": os.environ.get("OS_REGION_NAME", ""),
-        "https_cacert": os.environ.get("OS_CACERT", ""),
-        "https_insecure": strutils.bool_from_string(
-            os.environ.get("OS_INSECURE")),
-        "profiler_hmac_key": os.environ.get("OSPROFILER_HMAC_KEY"),
-        "profiler_conn_str": os.environ.get("OSPROFILER_CONN_STR")
-    }
-
-    user_domain_name = os.environ.get("OS_USER_DOMAIN_NAME")
-    project_domain_name = os.environ.get("OS_PROJECT_DOMAIN_NAME")
-    identity_api_version = os.environ.get(
-        "OS_IDENTITY_API_VERSION", os.environ.get("IDENTITY_API_VERSION"))
-    if (identity_api_version == "3" or
-            (identity_api_version is None and
-                (user_domain_name or project_domain_name))):
-        # it is Keystone v3 and it has another config scheme
-        creds["admin"]["project_name"] = creds["admin"].pop("tenant_name")
-        creds["admin"]["user_domain_name"] = user_domain_name or "Default"
-        project_domain_name = project_domain_name or "Default"
-        creds["admin"]["project_domain_name"] = project_domain_name
-
-    return creds
-
-
-def get_project_name_from_env():
-    tenant_name = os.environ.get("OS_PROJECT_NAME",
-                                 os.environ.get("OS_TENANT_NAME"))
-    if tenant_name is None:
-        raise exceptions.ValidationError("Either the OS_PROJECT_NAME or "
-                                         "OS_TENANT_NAME environment variable "
-                                         "is required, but neither is set.")
-
-    return tenant_name
-
-
-def get_endpoint_type_from_env():
-    endpoint_type = os.environ.get("OS_ENDPOINT_TYPE",
-                                   os.environ.get("OS_INTERFACE"))
-    if endpoint_type and "URL" in endpoint_type:
-        endpoint_type = endpoint_type.replace("URL", "")
-
-    return endpoint_type

@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import configparser
 import copy
 import errno
 import inspect
@@ -21,8 +22,6 @@ import os
 import shutil
 import subprocess
 import tempfile
-
-from six.moves import configparser
 
 from rally.utils import encodeutils
 
@@ -202,8 +201,8 @@ class Rally(object):
             return output
 
         except subprocess.CalledProcessError as e:
-            output = e.output
-            raise RallyCliError(cmd, e.returncode, e.output)
+            output = encodeutils.safe_decode(e.output)
+            raise RallyCliError(cmd, e.returncode, output) from None
         finally:
             if write_report:
                 if not report_path:

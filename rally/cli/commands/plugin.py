@@ -13,11 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from __future__ import print_function
-
 from rally.cli import cliutils
 from rally.common.plugin import plugin
 from rally.common import utils
+from rally import exceptions
 from rally import plugins
 
 
@@ -42,8 +41,6 @@ class PluginCommands(object):
                    help="Plugin name.")
     @cliutils.args("--platform", dest="platform", type=str,
                    help="Plugin platform.")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @plugins.ensure_plugins_are_loaded
     def show(self, api, name, platform=None):
         """Show detailed information about a Rally plugin."""
@@ -60,6 +57,7 @@ class PluginCommands(object):
                 )
             else:
                 print("Plugin %s not found at any platform" % name)
+            return exceptions.PluginNotFound.error_code
 
         elif len(found) == 1 or exact_match:
             plugin_ = found[0] if len(found) == 1 else exact_match[0]
@@ -81,6 +79,7 @@ class PluginCommands(object):
         else:
             print("Multiple plugins found:")
             self._print_plugins_list(found)
+            return exceptions.MultiplePluginsFound.error_code
 
     @cliutils.args(
         "--name", dest="name", type=str,
@@ -88,8 +87,6 @@ class PluginCommands(object):
     @cliutils.args(
         "--platform", dest="platform", type=str,
         help="List only plugins that are in the specified platform.")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @cliutils.args(
         "--plugin-base", dest="base_cls", type=str,
         help="Plugin base class.")

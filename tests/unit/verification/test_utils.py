@@ -12,10 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import configparser
 import subprocess
-
-import mock
-from six.moves import configparser
+from unittest import mock
 
 from rally.verification import utils
 from tests.unit import test
@@ -40,9 +39,11 @@ class UtilsTestCase(test.TestCase):
     def test_check_output(self, mock_check_output, mock_log,
                           mock_encodeutils):
 
-        self.assertEqual(mock_check_output.return_value,
+        self.assertEqual(mock_encodeutils.safe_decode.return_value,
                          utils.check_output())
         self.assertFalse(mock_log.error.called)
+        mock_encodeutils.safe_decode.assert_called_once_with(
+            mock_check_output.return_value)
 
         mock_check_output.side_effect = subprocess.CalledProcessError(1, None)
         self.assertRaises(subprocess.CalledProcessError, utils.check_output)
@@ -56,10 +57,10 @@ class UtilsTestCase(test.TestCase):
         self.assertEqual(3, mock_log.error.call_count)
         mock_log.error.assert_any_call(msg)
 
-    @mock.patch("rally.verification.utils.six.StringIO")
+    @mock.patch("rally.verification.utils.io.StringIO")
     @mock.patch("rally.verification.utils.add_extra_options")
     @mock.patch("rally.verification.utils.configparser.ConfigParser")
-    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("builtins.open", side_effect=mock.mock_open())
     def test_extend_configfile(self, mock_open, mock_config_parser,
                                mock_add_extra_options, mock_string_io):
         extra_options = mock.Mock()
@@ -79,11 +80,14 @@ class UtilsTestCase(test.TestCase):
     def test_add_extra_options(self):
         conf = configparser.ConfigParser()
         extra_options = {"section": {"foo": "bar"},
-                         "section2": {"option": "value"}}
+                         "section2": {"option": "value"},
+                         "section3": {"CamelCaseOption": "CamelCaseValue"}}
 
         conf = utils.add_extra_options(extra_options, conf)
 
-        expected = {"section": ("foo", "bar"), "section2": ("option", "value")}
+        expected = {"section": ("foo", "bar"),
+                    "section2": ("option", "value"),
+                    "section3": ("CamelCaseOption", "CamelCaseValue")}
         for section, option in expected.items():
             result = conf.items(section)
             self.assertIn(option, result)

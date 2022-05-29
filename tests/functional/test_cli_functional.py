@@ -14,20 +14,26 @@
 #    under the License.
 
 import subprocess
-import unittest
+
+import testtools
+
+from rally.utils import encodeutils
 
 
-class CLITestCase(unittest.TestCase):
+class CLITestCase(testtools.TestCase):
 
     def test_rally_cli(self):
         try:
-            output = subprocess.check_output(["rally"],
-                                             stderr=subprocess.STDOUT)
+            subprocess.check_output(["rally"], stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
-            output = e.output
-        self.assertIn("too few arguments", output)
+            output = encodeutils.safe_decode(e.output)
+        else:
+            self.fail("It should ve non-zero exit code.")
+
+        self.assertIn("the following arguments are required: category", output)
 
     def test_version_cli(self):
-        output = subprocess.check_output(["rally", "version"],
-                                         stderr=subprocess.STDOUT)
+        output = encodeutils.safe_decode(
+            subprocess.check_output(["rally", "version"],
+                                    stderr=subprocess.STDOUT))
         self.assertIn("Rally version:", output)

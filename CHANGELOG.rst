@@ -17,7 +17,243 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-unreleased
+[3.2.0] - 2020-10-30
+--------------------
+
+Added
+~~~~~
+
+* Extend CI for checking installation on Ubuntu Focal environment.
+* Extend ``rally task start`` command output with the progress of finishing
+  workloads
+* Introduce ``rally task restart`` command.
+
+Fixed
+~~~~~
+
+* [verification component] Make config parser case sensitivity in
+  configure-verifier
+
+  `Launchpad-bug #1877930 <https://launchpad.net/bugs/1877930>`_
+
+[3.1.0] - 2020-05-08
+--------------------
+
+Changed
+~~~~~~~
+
+* Validator for scenario arguments do not initialize scenario class anymore for
+  discovering argument spec of the *run* method.
+
+* Docker image includes the latest setuptools
+
+Fixed
+~~~~~
+
+* [verification component] Failure while parsing subunit v2 stream in case of
+  unwanted test_id
+
+  `Launchpad-bug #1871406 <https://launchpad.net/bugs/1871406>`_
+
+[3.0.0] - 2020-03-23
+--------------------
+
+Added
+~~~~~
+
+* CI for covering unit and functional tests against Python 3.8 environment.
+  Everything works, so we have proved Python 3.8 support
+
+* Add CI job for testing installation of Rally at Centos 8.
+
+* Updating a *latest* tag of `docker image
+  <https://hub.docker.com/r/xrally/xrally>`_ on every merged commit.
+
+Changed
+~~~~~~~
+
+* *rally plugin show* command returns not-zero exit code in case of not found
+  or multiple match errors
+
+* `docker image <https://hub.docker.com/r/xrally/xrally>`_ is switched to use
+  python3.6.
+
+* *path_or_url* plugin follows redirects while validating urls now.
+
+* *rally task sla-check* fails if there is no data.
+
+Deprecated
+~~~~~~~~~~
+
+* Command *rally task results* is deprecated. Use *rally task report --json*
+  instead.
+
+* Module *rally.common.sshutils* is deprecated. Use *rally.utils.sshutils*
+  instead.
+
+* Module *rally.common.yamlutils* is deprecated. It was designed for CLI usage
+  and moves to right place.
+
+* Module *rally.common.fileutils* is deprecated.
+
+* All modules from *rally.plugins.common.contexts* are deprecated. Use
+  *rally.plugins.task.contexts* instead.
+
+* All modules from *rally.plugins.common.exporters* are deprecated. Use
+  *rally.plugins.task.exporters* instead.
+
+* Module *rally.plugins.common.hook.sys_call* is deprecated. Use
+  *rally.plugins.task.hooks.sys_call* instead.
+
+* All modules from *rally.plugins.common.hook.triggers* are deprecated. Use
+  *rally.plugins.task.hook_triggers* instead.
+
+* All modules from *rally.plugins.common.runners* are deprecated. Use
+  *rally.plugins.task.runners* instead.
+
+* All modules from *rally.plugins.common.scenarios* are deprecated. Use
+  *rally.plugins.task.scenarios* instead.
+
+* All modules from *rally.plugins.common.sla* are deprecated. Use
+  *rally.plugins.task.sla* instead.
+
+* All modules from *rally.plugins.common.verification* are deprecated. Use
+  *rally.plugins.verification* instead.
+
+Removed
+~~~~~~~
+
+* Python 2.7, Python 3.4 and Python 3.5 support
+
+* Devstack plugin. It was deprecated long time ago. rally-openstack project
+  should be used instead
+
+* *rally.common.utils.distance* method was deprecated since Rally 0.4.1
+
+* *rally.common.utils.format_float_to_str* method was deprecated since
+  Rally 0.11.2. *rally.utils.strutils.format_float_to_str* should be used
+  instead.
+
+* *rally.task.atomic.optional_action_timer* decorator was deprecated since
+  Rally 0.10.0
+
+* *rally.task.hook.Hook* class was deprecated since Rally 0.10.0.
+  *rally.task.hook.HookAction* should be used instead.
+
+* *rally.task.trigger* module was deprecated since Rally 0.10.0.
+  *rally.task.hook.HookTrigger* should be used instead.
+
+* *rally.common.i18n* module was deprecated since Rally 0.10.0
+
+* *namespace* argument of *configure* decorator of Scenario, Context,
+  Validators plugins. It was deprecated since Rally 0.10.0 in favor of
+  *platform*.
+
+* *install_rally.sh* script is too complicated and installs only rally
+  framework without plugins.
+
+Fixed
+~~~~~
+
+* inaccurate calculation of 90 and 95 percentiles in case of 10k+ iterations
+
+[2.1.0] - 2019-11-19
+--------------------
+
+Please note that Python 2.7 will reach the end of its life on
+January 1st, 2020. A future version of Rally will drop support for Python 2.7,
+it will happen soon. Also, the same will happen with support of Python 3.4 and
+Python 3.5
+
+Removed
+~~~~~~~
+
+Library *netaddr* from direct project requirements. We never use it at Rally
+framework.
+
+Fixed
+~~~~~
+
+Support of latest alembic
+
+`Launchpad-bug #1844884 <https://launchpad.net/bugs/1844884>`_
+
+[2.0.0] - 2019-09-13
+--------------------
+
+Changed
+~~~~~~~
+
+python jsonschema dependency is not limited by *<3.0.0* anymore and you can
+use draft-7 as for now.
+
+Removed
+~~~~~~~
+
+* *rally task sla_check* command was deprecated in Rally 0.8.0 in favor of
+  *rally task sla-check*.
+
+* *rally-manage db* command (and the whole *rally-manage* entry-point) was
+  deprecated in Rally 0.10.0 in favor of *rally db* command.
+
+* *--namespace* argument was deprecated in Rally 0.10.0 in favor of
+  *--platform* which has better meaning.
+  Affected commands: *rally plugin show*, *rally plugin list*,
+  *rally verify list-plugins*, *rally verify create-verifier*.
+
+* *--tasks* argument of *rally task report* command and *--task* argument of
+  *rally task use* command were deprecated in Rally 0.10.0 in favor of
+  unified *--uuid* argument.
+
+* *--junit* argument of *rally task report* command is deprecated in
+  Rally 0.10.0 in favor of *rally task export --type junit-xml*
+
+[1.6.0] - 2019-06-19
+--------------------
+
+Added
+~~~~~
+
+A list of tests to skip while running verification now supports regular
+expressions.
+
+Fixed
+~~~~~
+
+* incompatibility with SQLAlchemy 1.3
+* several py3 issues of verification component
+
+[1.5.1] - 2019-05-15
+--------------------
+
+Fixed
+~~~~~
+
+**rally deployment create --fromenv** creates wrong spec for
+rally-openstack<=1.4.0 which doesn't pass **rally deployment check**.
+
+`Launchpad-bug #1829030 <https://launchpad.net/bugs/1829030>`_
+
+
+[1.5.0] - 2019-05-08
+--------------------
+
+Added
+~~~~~
+
+New two charts **EmbeddedChart** and **EmbeddedExternalChart** for embedding
+custom html code or external pages as complete charts of scenarios.
+
+[1.4.1] - 2019-02-28
+--------------------
+
+Fixed
+~~~~~
+
+* Python 3 issue of Verification component
+* Docker README file
+
+[1.4.0] - 2019-02-04
 --------------------
 
 Changed
@@ -26,7 +262,17 @@ Changed
 * Add the --html-static option to commands ``rally task trends``, it could generate
   trends report with embedded js/css.
 
-* Fix an issue with calling `rally` command without arguments
+* Removed dependency to ``morph`` library.
+
+Fixed
+~~~~~
+
+* ``rally`` command crashes while calling without any arguments
+
+* Fix the ssh error while passing an dss key in ssh utils.
+
+  `Launchpad-bug #1807870 <https://launchpad.net/bugs/1807870>`_
+
 
 [1.3.0] - 2018-12-01
 --------------------

@@ -10,7 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from rally.verification import context
 from tests.unit import test
@@ -22,6 +22,7 @@ class FakeContext(context.VerifierContext):
         pass
 
     def setup(self):
+        super(FakeContext, self).setup()
         pass
 
 

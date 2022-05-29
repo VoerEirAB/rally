@@ -173,7 +173,7 @@ class _Deployment(APIGroup):
                     #   includes Exception cls with a message. By parsing it,
                     #   we can get etype.
                     trace = res["traceback"].split("\n")
-                    last_line = [l for l in trace if l][-1]
+                    last_line = [line for line in trace if line][-1]
                     etype, _msg = last_line.split(":", 1)
                 else:
                     etype = "n/a"
@@ -239,12 +239,12 @@ class _Task(APIGroup):
             # NOTE(boris-42): Removing variables that have default values from
             #                 missing. Construction that won't be properly
             #                 checked is {% set x = x or 1}
-            if re.search(mis.join(["{%\s*set\s+", "\s*=\s*", "[^\w]+"]),
+            if re.search(mis.join([r"{%\s*set\s+", r"\s*=\s*", r"[^\w]+"]),
                          task_template):
                 return False
             # NOTE(jlk): Also check for a default filter which can show up as
             #            a missing variable
-            if re.search(mis + "\s*\|\s*default\(", task_template):
+            if re.search(mis + r"\s*\|\s*default\(", task_template):
                 return False
             return True
 
@@ -252,7 +252,7 @@ class _Task(APIGroup):
         #                 builtin functions (e.g. range()). Unfortunately,
         #                 __builtins__ doesn't return them (when it is not
         #                 main module)
-        from six.moves import builtins
+        import builtins
 
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_dir, encoding="utf8"))
@@ -275,8 +275,8 @@ class _Task(APIGroup):
         # declared in jinja2.Environment.globals for both types of undeclared
         # variables and successfully renders templates in both cases.
         required_kwargs = jinja2.meta.find_undeclared_variables(ast)
-        missing = (set(required_kwargs) - set(kwargs) - set(dir(builtins)) -
-                   set(env.globals))
+        missing = (set(required_kwargs) - set(kwargs) - set(dir(builtins))
+                   - set(env.globals))
         real_missing = [mis for mis in missing
                         if is_really_missing(mis, task_template)]
         if real_missing:
@@ -745,8 +745,8 @@ class _Verifier(APIGroup):
                     verifier, verifier.status, consts.VerifierStatus.INSTALLED)
             )
 
-        system_wide_in_use = (system_wide or
-                              (system_wide is None and verifier.system_wide))
+        system_wide_in_use = (
+            system_wide or (system_wide is None and verifier.system_wide))
         if update_venv and system_wide_in_use:
             raise exceptions.RallyException(
                 "It is impossible to update the virtual environment for "
@@ -1081,7 +1081,8 @@ class _Verification(APIGroup):
                     "There are no failed tests from verification (UUID=%s)."
                     % verification_uuid)
         else:
-            tests = tests.keys()
+            # py2 and py3
+            tests = list(tests.keys())
 
         deployment = (deployment_id if deployment_id
                       else verification.deployment_uuid)

@@ -15,20 +15,16 @@
 
 """Rally command: verify"""
 
-from __future__ import print_function
-
+import configparser
 import datetime as dt
 import json
 import os
 import webbrowser
 
-from six.moves import configparser
-
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import fileutils
+from rally.cli import yamlutils as yaml
 from rally.common import logging
-from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally import plugins
 
@@ -42,6 +38,8 @@ LIST_VERIFICATIONS_HINT = ("HINT: You can list all verifications, executing "
                            "command `rally verify list`.")
 
 DEFAULT_REPORT_TYPES = ("HTML", "HTML-Static", "JSON", "JUnit-XML")
+
+ACTIVE = u":-)"
 
 
 class VerifyCommands(object):
@@ -89,8 +87,6 @@ class VerifyCommands(object):
 
     @cliutils.args("--platform", dest="platform", type=str,
                    help="Requried patform (e.g. openstack).")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @plugins.ensure_plugins_are_loaded
     def list_plugins(self, api, platform=None):
         """List all plugins for verifiers management."""
@@ -118,8 +114,6 @@ class VerifyCommands(object):
                    help="Verifier plugin platform. Should be specified in "
                         "case of two verifier plugins with equal names but "
                         "in different platforms.")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @cliutils.args("--source", dest="source", type=str, required=False,
                    help="Path or URL to the repo to clone verifier from.")
     @cliutils.args("--version", dest="version", type=str, required=False,
@@ -154,7 +148,7 @@ class VerifyCommands(object):
     def use_verifier(self, api, verifier_id):
         """Choose a verifier to use for the future operations."""
         verifier = api.verifier.get(verifier_id=verifier_id)
-        fileutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
+        envutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
         print("Using verifier '%s' (UUID=%s) as the default verifier "
               "for the future CLI operations."
               % (verifier["name"], verifier["uuid"]))
@@ -175,7 +169,7 @@ class VerifyCommands(object):
             formatters = {
                 "Created at": lambda v: v["created_at"],
                 "Updated at": lambda v: v["updated_at"],
-                "Active": lambda v: u"\u2714" if v["uuid"] == cv else "",
+                "Active": lambda v: ACTIVE if v["uuid"] == cv else "",
             }
             cliutils.print_list(verifiers, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
@@ -202,8 +196,8 @@ class VerifyCommands(object):
         formatters = {
             "Created at": lambda v: v["created_at"].replace("T", " "),
             "Updated at": lambda v: v["updated_at"].replace("T", " "),
-            "Active": lambda v: u"\u2714"
-                                if v["uuid"] == used_verifier else None,
+            "Active": lambda v: (ACTIVE
+                                 if v["uuid"] == used_verifier else None),
             "Extra settings": lambda v: (json.dumps(v["extra_settings"],
                                                     indent=4)
                                          if v["extra_settings"] else None),
@@ -339,6 +333,7 @@ class VerifyCommands(object):
             if extra_options:
                 if os.path.isfile(extra_options):
                     conf = configparser.ConfigParser()
+                    conf.optionxform = str
                     conf.read(extra_options)
                     extra_options = dict(conf._sections)
                     for s in extra_options:
@@ -455,7 +450,8 @@ class VerifyCommands(object):
                    required=False,
                    help="Path to a file with a list of tests to skip. "
                         "Format: json or yaml like a dictionary where keys "
-                        "are test names and values are reasons.")
+                        "are regexes matching test names and values are "
+                        "reasons.")
     @cliutils.args("--xfail-list", dest="xfail_list", type=str,
                    metavar="<path>", required=False,
                    help="Path to a file with a list of tests that will be "
@@ -538,7 +534,7 @@ class VerifyCommands(object):
 
         verification = api.verification.get(
             verification_uuid=verification_uuid)
-        fileutils.update_globals_file(
+        envutils.update_globals_file(
             envutils.ENV_VERIFICATION, verification["uuid"])
         print("Using verification (UUID=%s) as the default verification "
               "for the future operations." % verification["uuid"])
@@ -631,10 +627,9 @@ class VerifyCommands(object):
         formatters = {
             "Started at": lambda v: v["created_at"].replace("T", " "),
             "Finished at": lambda v: v["updated_at"].replace("T", " "),
-            "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
-                                                        TIME_FORMAT) -
-                                   dt.datetime.strptime(v["created_at"],
-                                                        TIME_FORMAT)),
+            "Duration": lambda v: (
+                dt.datetime.strptime(v["updated_at"], TIME_FORMAT)
+                - dt.datetime.strptime(v["created_at"], TIME_FORMAT)),
             "Run arguments": run_args_formatter,
             "Tags": lambda v: ", ".join(v["tags"]) or None,
             "Verifier name": lambda v: "%s (UUID: %s)" % (verifier["name"],
@@ -701,10 +696,9 @@ class VerifyCommands(object):
                     deployment=v["deployment_uuid"])["name"]),
                 "Started at": lambda v: v["created_at"],
                 "Finished at": lambda v: v["updated_at"],
-                "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
-                                                            TIME_FORMAT) -
-                                       dt.datetime.strptime(v["created_at"],
-                                                            TIME_FORMAT))
+                "Duration": lambda v:
+                (dt.datetime.strptime(v["updated_at"], TIME_FORMAT)
+                 - dt.datetime.strptime(v["created_at"], TIME_FORMAT))
             }
             cliutils.print_list(verifications, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)

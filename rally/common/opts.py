@@ -16,7 +16,9 @@ import importlib
 
 from rally.common import cfg
 from rally.common import logging
+from rally.task import context
 from rally.task import engine
+from rally.task import scenario
 
 CONF = cfg.CONF
 
@@ -24,8 +26,10 @@ CONF = cfg.CONF
 def list_opts():
 
     merged_opts = {"DEFAULT": []}
+    merged_opts["DEFAULT"].extend(context.CONF_OPTS)
     merged_opts["DEFAULT"].extend(logging.DEBUG_OPTS)
     merged_opts["DEFAULT"].extend(engine.TASK_ENGINE_OPTS)
+    merged_opts["DEFAULT"].extend(scenario.CONF_OPTS)
 
     return merged_opts.items()
 
@@ -56,7 +60,11 @@ def register_options_from_path(path):
             return
 
         options = list_func()
-        register_opts(options.items())
+
+        if isinstance(options, dict):
+            options = options.items()
+
+        register_opts(options)
         _registered_paths.append(path)
 
 

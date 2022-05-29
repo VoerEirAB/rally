@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from rally.common import version
 from tests.unit import test
@@ -19,7 +19,7 @@ from tests.unit import test
 
 class ModuleTestCase(test.TestCase):
 
-    VERSION_REGEX = "^\d+\.\d+\.\d+(~dev\d+)?$"
+    VERSION_REGEX = r"^\d+\.\d+\.\d+(~dev\d+)?$"
 
     def test_version_info(self):
         version_str = version.version_info.semantic_version().debian_string()
