@@ -216,8 +216,16 @@ class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
 
 
 class _TimeFormat(utils.ImmutableMixin, utils.EnumMixin):
-    """International time formats"""
+    """International time formats."""
     ISO8601 = "%Y-%m-%dT%H:%M:%S%z"
+
+
+class SocketAF(utils.ImmutableMixin, utils.EnumMixin):
+    """Socket address families."""
+
+    IPV4 = "ipv4"           # socket.AF_INET
+    IPV6 = "ipv6"           # socket.AF_INET6
+    UNSPEC = "unspecified"  # socket.AF_UNSPEC
 
 
 TaskStatus = _TaskStatus()

@@ -180,6 +180,8 @@
 # a random string. (string value)
 #scenario_resource_name_format = <None>
 
+# Set Internet Protocol to use for sending requests.
+#socket_af = unspecified
 
 [database]
 

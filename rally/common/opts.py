@@ -17,10 +17,19 @@ import importlib
 from rally.common import cfg
 from rally.common import logging
 from rally.task import context
+from rally.consts import SocketAF
 from rally.task import engine
 from rally.task import scenario
 
+
 CONF = cfg.CONF
+
+
+SocketAF_OPTS = [cfg.StrOpt(
+    "socket_af", default=SocketAF.UNSPEC,
+    choices=[SocketAF.IPV4, SocketAF.IPV6, SocketAF.UNSPEC],
+    help="Set Internet Protocol to use for sending requests."
+)]
 
 
 def list_opts():
@@ -30,6 +39,7 @@ def list_opts():
     merged_opts["DEFAULT"].extend(logging.DEBUG_OPTS)
     merged_opts["DEFAULT"].extend(engine.TASK_ENGINE_OPTS)
     merged_opts["DEFAULT"].extend(scenario.CONF_OPTS)
+    merged_opts["DEFAULT"].extend(SocketAF_OPTS)
 
     return merged_opts.items()
 
