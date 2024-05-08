@@ -20,17 +20,19 @@ import os
 import sys
 import textwrap
 import warnings
+from requests.packages.urllib3.util import connection
 
 import jsonschema
 import prettytable
 import sqlalchemy.exc
 
 from rally import api
+from rally import exceptions
 from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import info
-from rally import exceptions
 from rally.utils import encodeutils
+from rally.utils import socketutils
 
 
 CONF = cfg.CONF
@@ -617,6 +619,13 @@ def run(argv, categories):
     except exceptions.RallyException as e:
         print(e)
         return(2)
+
+    # Set Internet Protocol to use for sending requests.
+    ADDRESS_FAMILY = socketutils.get_address_family(
+        CONF.socket_af, connection.HAS_IPV6
+    )
+    connection.allowed_gai_family = lambda: ADDRESS_FAMILY
+    LOG.info(f"Allowed address family set to {str(ADDRESS_FAMILY)}.")
 
     if CONF.category.name == "bash-completion":
         print(_generate_bash_completion_script())
